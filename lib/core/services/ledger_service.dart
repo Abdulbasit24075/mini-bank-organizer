@@ -186,8 +186,7 @@ class LedgerService {
     final ledgerData = ledgerQuery.docs.first.data();
 
     final int balance = ledgerData['balance'] as int;
-    final bool clearRequestPending =
-        ledgerData['clearRequestPending'] == true;
+    final bool clearRequestPending = ledgerData['clearRequestPending'] == true;
 
     if (!clearRequestPending) {
       throw Exception('No clear history request found.');
@@ -211,6 +210,12 @@ class LedgerService {
         .where('billerId', isEqualTo: billerId)
         .get();
 
+    final onlineRequestsQuery = await _db
+        .collection('online_payment_requests')
+        .where('adminId', isEqualTo: adminId)
+        .where('billerId', isEqualTo: billerId)
+        .get();
+
     final batch = _db.batch();
 
     for (final doc in billsQuery.docs) {
@@ -218,6 +223,10 @@ class LedgerService {
     }
 
     for (final doc in paymentsQuery.docs) {
+      batch.delete(doc.reference);
+    }
+
+    for (final doc in onlineRequestsQuery.docs) {
       batch.delete(doc.reference);
     }
 
@@ -246,8 +255,8 @@ class LedgerService {
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> ledgerStreamForBiller(
-      String billerId,
-      ) {
+    String billerId,
+  ) {
     return _db
         .collection('ledgers')
         .where('billerId', isEqualTo: billerId)
@@ -268,8 +277,8 @@ class LedgerService {
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> paymentHistoryForBiller(
-      String billerId,
-      ) {
+    String billerId,
+  ) {
     return _db
         .collection('payments')
         .where('billerId', isEqualTo: billerId)

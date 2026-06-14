@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../auth/signup_screen.dart';
 import '../core/services/relationship_service.dart';
 import '../core/services/ledger_service.dart';
+import '../core/services/online_payment_service.dart';
 import '../shared/notebook_screen.dart';
 import '../shared/payment_history_screen.dart';
 import '../shared/statistics_screen.dart'; // 1. Import Statistics Screen
@@ -12,6 +13,7 @@ import '../shared/statistics_screen.dart'; // 1. Import Statistics Screen
 import 'create_bill_screen.dart';
 import 'biller_ledger_screen.dart';
 import 'biller_bills_history_screen.dart';
+import 'biller_online_payment_requests_screen.dart';
 
 class BillerDashboard extends StatelessWidget {
   const BillerDashboard({super.key});
@@ -230,6 +232,55 @@ class BillerDashboard extends StatelessWidget {
             );
           },
         ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+      floatingActionButton: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: OnlinePaymentService().pendingRequestsForBiller(billerId),
+        builder: (context, snapshot) {
+          final pendingCount = snapshot.data?.docs.length ?? 0;
+
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [
+              FloatingActionButton(
+                backgroundColor: Colors.green,
+                child: const Icon(Icons.account_balance_wallet),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const BillerOnlinePaymentRequestsScreen(),
+                    ),
+                  );
+                },
+              ),
+              if (pendingCount > 0)
+                Positioned(
+                  right: -4,
+                  top: -4,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: Text(
+                      pendingCount > 99 ? '99+' : '$pendingCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }

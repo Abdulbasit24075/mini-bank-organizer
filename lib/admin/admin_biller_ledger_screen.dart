@@ -6,6 +6,7 @@ import '../core/services/ledger_service.dart';
 import '../core/services/pdf_report_service.dart';
 import '../shared/statistics_screen.dart';
 import 'admin_biller_bill_history_screen.dart';
+import 'online_payment_request_screen.dart';
 
 class AdminBillerLedgerScreen extends StatelessWidget {
   final String billerId;
@@ -156,6 +157,26 @@ class AdminBillerLedgerScreen extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 _payBox(context, adminId),
+
+                const SizedBox(height: 12),
+
+                _actionButton(
+                  text: 'Online Pay',
+                  icon: Icons.account_balance_wallet,
+                  color: Colors.green,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => OnlinePaymentRequestScreen(
+                          adminId: adminId,
+                          billerId: billerId,
+                          billerName: billerName,
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
           );
