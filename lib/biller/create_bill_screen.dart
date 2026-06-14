@@ -34,7 +34,11 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
         throw Exception('Admin not found for this biller');
       }
 
-      final int amount = int.parse(_amountCtrl.text.trim());
+      final int? amount = int.tryParse(_amountCtrl.text.trim());
+
+      if (amount == null || amount <= 0) {
+        throw Exception('Please enter a valid amount greater than 0');
+      }
       final String billerId =
           FirebaseAuth.instance.currentUser!.uid;
       final String adminId = admin['uid'];
