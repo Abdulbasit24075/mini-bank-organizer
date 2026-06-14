@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "682728080106",
+    "project_id": "family-billing-app",
+    "storage_bucket": "family-billing-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:682728080106:android:f33b3091af6e2475078d93",
+        "android_client_info": {
+          "package_name": "com.example.mini_bank_organizer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_4xYluACOa4yE7WcjO-hXr8qRfsTqCNw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
