@@ -9,6 +9,7 @@ import '../core/services/online_payment_service.dart';
 import '../shared/notebook_screen.dart';
 import '../shared/payment_history_screen.dart';
 import '../shared/statistics_screen.dart'; // 1. Import Statistics Screen
+import '../shared/chatbot_screen.dart';
 
 import 'create_bill_screen.dart';
 import 'biller_ledger_screen.dart';
@@ -221,6 +222,20 @@ class BillerDashboard extends StatelessWidget {
                                 billerId: billerId,
                                 billerName: biller['name'],
                               ),
+                            ),
+                          );
+                        },
+                      ),
+                      _actionCard(
+                        icon: Icons.chat,
+                        label: 'Smart Assistant',
+                        color: Colors.deepPurple,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  const ChatbotScreen(role: 'biller'),
                             ),
                           );
                         },

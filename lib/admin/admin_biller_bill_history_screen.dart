@@ -1,5 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+import '../shared/receipt_viewer_screen.dart';
 
 class AdminBillerBillHistoryScreen extends StatelessWidget {
   final String adminId;
@@ -52,11 +55,11 @@ class AdminBillerBillHistoryScreen extends StatelessWidget {
             itemCount: snapshot.data!.docs.length,
             itemBuilder: (context, index) {
               final bill = snapshot.data!.docs[index].data();
-
-              final Timestamp? timestamp = bill['createdAt'];
-              final String date = timestamp == null
-                  ? 'N/A'
-                  : timestamp.toDate().toString().split(' ')[0];
+              final details = (bill['billDetails'] ?? '').toString();
+              final receiptImageUrl = (bill['receiptImageUrl'] ?? '')
+                  .toString();
+              final receiptImageBase64 = (bill['receiptImageBase64'] ?? '')
+                  .toString();
 
               return Card(
                 elevation: 3,
@@ -64,22 +67,68 @@ class AdminBillerBillHistoryScreen extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: ListTile(
-                  leading: const Icon(
-                    Icons.receipt_long,
-                    color: Colors.deepPurple,
-                  ),
-                  title: Text(
-                    bill['title'] ?? 'Untitled Bill',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text('Date: $date'),
-                  trailing: Text(
-                    'Rs ${bill['totalAmount'] ?? 0}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.deepPurple,
-                    ),
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(
+                            Icons.receipt_long,
+                            color: Colors.deepPurple,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              (bill['title'] ?? 'Untitled Bill').toString(),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            'Rs ${_billAmount(bill)}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.deepPurple,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text('Date: ${_formatTimestamp(bill['createdAt'])}'),
+                      if (details.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(details),
+                      ],
+                      if (receiptImageUrl.isNotEmpty ||
+                          receiptImageBase64.isNotEmpty) ...[
+                        const SizedBox(height: 10),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton.icon(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ReceiptViewerScreen(
+                                    imageUrl: receiptImageUrl,
+                                    imageBase64: receiptImageBase64,
+                                    title: (bill['title'] ?? 'Receipt')
+                                        .toString(),
+                                  ),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.image),
+                            label: const Text('View Receipt'),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               );
@@ -88,5 +137,20 @@ class AdminBillerBillHistoryScreen extends StatelessWidget {
         },
       ),
     );
+  }
+
+  String _formatTimestamp(dynamic value) {
+    if (value is Timestamp) {
+      return DateFormat('dd MMM yyyy, hh:mm a').format(value.toDate());
+    }
+
+    return 'N/A';
+  }
+
+  int _billAmount(Map<String, dynamic> bill) {
+    final amount = bill['amount'] ?? bill['totalAmount'];
+    if (amount is int) return amount;
+    if (amount is num) return amount.toInt();
+    return 0;
   }
 }

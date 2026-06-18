@@ -47,7 +47,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       final Timestamp? timestamp = data['createdAt'];
 
       if (_isInsideSelectedDate(timestamp)) {
-        totalBillsAmount += (data['totalAmount'] ?? 0) as int;
+        totalBillsAmount += _billAmount(data);
         numberOfBills++;
       }
     }
@@ -97,6 +97,13 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
     return (date.isAtSameMomentAs(fromDate!) || date.isAfter(fromDate!)) &&
         (date.isAtSameMomentAs(toDate!) || date.isBefore(toDate!));
+  }
+
+  int _billAmount(Map<String, dynamic> bill) {
+    final amount = bill['amount'] ?? bill['totalAmount'];
+    if (amount is int) return amount;
+    if (amount is num) return amount.toInt();
+    return 0;
   }
 
   void _applyFilter(String filter) {
@@ -296,18 +303,13 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: color,
           child: Icon(icon, color: Colors.white),
         ),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(
           value,
           style: TextStyle(

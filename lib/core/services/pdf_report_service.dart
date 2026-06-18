@@ -210,6 +210,10 @@ class PdfReportService {
     return 0;
   }
 
+  int _billAmount(Map<String, dynamic> bill) {
+    return _asInt(bill['amount'] ?? bill['totalAmount']);
+  }
+
   List<_StatementHistoryItem> _buildCombinedHistory(
     List<QueryDocumentSnapshot<Map<String, dynamic>>> bills,
     List<QueryDocumentSnapshot<Map<String, dynamic>>> payments,
@@ -223,7 +227,7 @@ class PdfReportService {
           createdAt: bill['createdAt'],
           type: 'Bill',
           details: (bill['title'] ?? 'Untitled Bill').toString(),
-          amount: _asInt(bill['totalAmount']),
+          amount: _billAmount(bill),
         ),
       );
     }

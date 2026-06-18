@@ -7,6 +7,7 @@ import 'linked_users_screen.dart';
 import 'admin_notebooks_screen.dart';
 import 'price_checker_screen.dart';
 import '../auth/signup_screen.dart';
+import '../shared/chatbot_screen.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
@@ -25,25 +26,34 @@ class AdminDashboard extends StatelessWidget {
     required String title,
     required String buttonText,
     required VoidCallback onPressed,
+    IconData? icon,
   }) {
     return Card(
       color: color,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 3,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+            Row(
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, color: Colors.white),
+                  const SizedBox(width: 8),
+                ],
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             SizedBox(
@@ -82,7 +92,7 @@ class AdminDashboard extends StatelessWidget {
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (_) => const SignupScreen()),
-                    (route) => false,
+                (route) => false,
               );
             },
           ),
@@ -186,6 +196,23 @@ class AdminDashboard extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (_) => const PriceCheckerScreen(),
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  _dashboardCard(
+                    color: Colors.deepPurple,
+                    title: 'Smart Assistant',
+                    buttonText: 'Open Assistant',
+                    icon: Icons.chat,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ChatbotScreen(role: 'admin'),
                         ),
                       );
                     },
