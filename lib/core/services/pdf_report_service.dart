@@ -39,8 +39,8 @@ class PdfReportService {
         .where('billerId', isEqualTo: billerId)
         .get();
 
-    final bills = [...billsQuery.docs]..sort(_compareCreatedAt);
-    final payments = [...paymentsQuery.docs]..sort(_compareCreatedAt);
+    final history = _buildCombinedHistory(billsQuery.docs, paymentsQuery.docs)
+      ..sort(_compareHistoryItems);
 
     final totalBills = _asInt(ledger['totalBills']);
     final totalPaid = _asInt(ledger['totalPaid']);
@@ -71,13 +71,10 @@ class PdfReportService {
               [balanceLabel, 'Rs ${balance.abs()}'],
             ]),
             pw.SizedBox(height: 18),
-            _sectionTitle('Bills History'),
-            bills.isEmpty ? _emptyText('No bills found') : _billsTable(bills),
-            pw.SizedBox(height: 18),
-            _sectionTitle('Payment History'),
-            payments.isEmpty
-                ? _emptyText('No payments found')
-                : _paymentsTable(payments),
+            _sectionTitle('Transaction History'),
+            history.isEmpty
+                ? _emptyText('No bills or payments found')
+                : _historyTable(history),
             pw.SizedBox(height: 18),
             _sectionTitle('Final Status'),
             _infoTable([
@@ -140,66 +137,39 @@ class PdfReportService {
     );
   }
 
-  pw.Widget _billsTable(
-    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
-  ) {
+  pw.Widget _historyTable(List<_StatementHistoryItem> items) {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.grey400),
       columnWidths: const {
-        0: pw.FlexColumnWidth(1.2),
-        1: pw.FlexColumnWidth(2),
-        2: pw.FlexColumnWidth(1),
+        0: pw.FlexColumnWidth(1.45),
+        1: pw.FlexColumnWidth(0.8),
+        2: pw.FlexColumnWidth(2),
+        3: pw.FlexColumnWidth(1),
+        4: pw.FlexColumnWidth(1.2),
       },
       children: [
         pw.TableRow(
           decoration: const pw.BoxDecoration(color: PdfColors.grey200),
           children: [
-            _cell('Date', isHeader: true),
-            _cell('Bill Title', isHeader: true),
+            _cell('Date & Time', isHeader: true),
+            _cell('Type', isHeader: true),
+            _cell('Details', isHeader: true),
             _cell('Amount', isHeader: true),
+            _cell('Balance After', isHeader: true),
           ],
         ),
-        ...docs.map((doc) {
-          final bill = doc.data();
+        ...items.map((item) {
           return pw.TableRow(
             children: [
-              _cell(_formatTimestamp(bill['createdAt'])),
-              _cell((bill['title'] ?? 'Untitled Bill').toString()),
-              _cell('Rs ${_asInt(bill['totalAmount'])}'),
-            ],
-          );
-        }),
-      ],
-    );
-  }
-
-  pw.Widget _paymentsTable(
-    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
-  ) {
-    return pw.Table(
-      border: pw.TableBorder.all(color: PdfColors.grey400),
-      columnWidths: const {
-        0: pw.FlexColumnWidth(1.2),
-        1: pw.FlexColumnWidth(1),
-        2: pw.FlexColumnWidth(1.2),
-      },
-      children: [
-        pw.TableRow(
-          decoration: const pw.BoxDecoration(color: PdfColors.grey200),
-          children: [
-            _cell('Date', isHeader: true),
-            _cell('Paid Amount', isHeader: true),
-            _cell('Balance After Payment', isHeader: true),
-          ],
-        ),
-        ...docs.map((doc) {
-          final payment = doc.data();
-          final balanceAfter = _asInt(payment['balanceAfter']);
-          return pw.TableRow(
-            children: [
-              _cell(_formatTimestamp(payment['createdAt'])),
-              _cell('Rs ${_asInt(payment['paidAmount'])}'),
-              _cell('Rs ${balanceAfter.abs()}'),
+              _cell(_formatTimestamp(item.createdAt)),
+              _cell(item.type),
+              _cell(item.details),
+              _cell('Rs ${item.amount}'),
+              _cell(
+                item.balanceAfter == null
+                    ? '-'
+                    : 'Rs ${item.balanceAfter!.abs()}',
+              ),
             ],
           );
         }),
@@ -228,7 +198,7 @@ class PdfReportService {
 
   String _formatTimestamp(dynamic value) {
     if (value is Timestamp) {
-      return DateFormat('dd MMM yyyy').format(value.toDate());
+      return _dateFormat.format(value.toDate());
     }
 
     return 'N/A';
@@ -240,12 +210,43 @@ class PdfReportService {
     return 0;
   }
 
-  int _compareCreatedAt(
-    QueryDocumentSnapshot<Map<String, dynamic>> a,
-    QueryDocumentSnapshot<Map<String, dynamic>> b,
+  List<_StatementHistoryItem> _buildCombinedHistory(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> bills,
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> payments,
   ) {
-    final aTime = a.data()['createdAt'];
-    final bTime = b.data()['createdAt'];
+    final history = <_StatementHistoryItem>[];
+
+    for (final doc in bills) {
+      final bill = doc.data();
+      history.add(
+        _StatementHistoryItem(
+          createdAt: bill['createdAt'],
+          type: 'Bill',
+          details: (bill['title'] ?? 'Untitled Bill').toString(),
+          amount: _asInt(bill['totalAmount']),
+        ),
+      );
+    }
+
+    for (final doc in payments) {
+      final payment = doc.data();
+      history.add(
+        _StatementHistoryItem(
+          createdAt: payment['createdAt'],
+          type: 'Payment',
+          details: 'Combined payment',
+          amount: _asInt(payment['paidAmount']),
+          balanceAfter: _asInt(payment['balanceAfter']),
+        ),
+      );
+    }
+
+    return history;
+  }
+
+  int _compareHistoryItems(_StatementHistoryItem a, _StatementHistoryItem b) {
+    final aTime = a.createdAt;
+    final bTime = b.createdAt;
 
     if (aTime is Timestamp && bTime is Timestamp) {
       return aTime.compareTo(bTime);
@@ -255,4 +256,20 @@ class PdfReportService {
     if (bTime is Timestamp) return 1;
     return 0;
   }
+}
+
+class _StatementHistoryItem {
+  final dynamic createdAt;
+  final String type;
+  final String details;
+  final int amount;
+  final int? balanceAfter;
+
+  const _StatementHistoryItem({
+    required this.createdAt,
+    required this.type,
+    required this.details,
+    required this.amount,
+    this.balanceAfter,
+  });
 }
