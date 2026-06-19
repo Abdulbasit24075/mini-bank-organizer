@@ -1,0 +1,330 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../core/services/groq_receipt_service.dart';
+import '../core/services/ledger_service.dart';
+import '../core/services/relationship_service.dart';
+
+class AiReceiptBillScreen extends StatefulWidget {
+  const AiReceiptBillScreen({super.key});
+
+  @override
+  State<AiReceiptBillScreen> createState() => _AiReceiptBillScreenState();
+}
+
+class _AiReceiptBillScreenState extends State<AiReceiptBillScreen> {
+  final TextEditingController _titleCtrl = TextEditingController();
+  final TextEditingController _detailsCtrl = TextEditingController();
+  final TextEditingController _amountCtrl = TextEditingController();
+  final GroqReceiptService _groqReceiptService = GroqReceiptService();
+
+  File? _receiptImage;
+  String? _rawResponse;
+  bool isExtracting = false;
+  bool isSaving = false;
+
+  @override
+  void dispose() {
+    _titleCtrl.dispose();
+    _detailsCtrl.dispose();
+    _amountCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickReceiptImage() async {
+    final pickedImage = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 35,
+      maxWidth: 900,
+    );
+
+    if (pickedImage == null) return;
+
+    setState(() {
+      _receiptImage = File(pickedImage.path);
+      _rawResponse = null;
+      _titleCtrl.clear();
+      _detailsCtrl.clear();
+      _amountCtrl.clear();
+    });
+  }
+
+  Future<String> _receiptImageBase64() async {
+    final image = _receiptImage;
+    if (image == null) {
+      throw Exception('Please pick a receipt image');
+    }
+
+    final bytes = await image.readAsBytes();
+    return base64Encode(bytes);
+  }
+
+  Future<void> _extractWithAi() async {
+    final image = _receiptImage;
+    if (image == null) {
+      _showMessage('Please pick a receipt image first.');
+      return;
+    }
+
+    setState(() => isExtracting = true);
+
+    try {
+      final result = await _groqReceiptService.extractReceipt(image);
+
+      if (!mounted) return;
+
+      setState(() {
+        _titleCtrl.text = result.title;
+        _detailsCtrl.text = result.billDetails;
+        _amountCtrl.text = result.totalAmount.toString();
+        _rawResponse = result.rawResponse;
+      });
+
+      _showMessage('Receipt extracted. Please review before creating bill.');
+    } catch (e) {
+      if (!mounted) return;
+      _showMessage(e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => isExtracting = false);
+      }
+    }
+  }
+
+  Future<void> _createBill() async {
+    final title = _titleCtrl.text.trim();
+    final billDetails = _detailsCtrl.text.trim();
+    final amount = int.tryParse(_amountCtrl.text.trim());
+
+    if (_receiptImage == null) {
+      _showMessage('Please pick a receipt image.');
+      return;
+    }
+
+    if (title.isEmpty) {
+      _showMessage('Bill title cannot be empty.');
+      return;
+    }
+
+    if (billDetails.isEmpty) {
+      _showMessage('Bill details cannot be empty.');
+      return;
+    }
+
+    if (amount == null || amount <= 0) {
+      _showMessage('Please enter a valid total amount.');
+      return;
+    }
+
+    setState(() => isSaving = true);
+
+    try {
+      final admin = await RelationshipService().getAdminForBiller();
+
+      if (admin == null) {
+        throw Exception('Admin not found for this biller');
+      }
+
+      final billerId = FirebaseAuth.instance.currentUser!.uid;
+      final adminId = admin['uid'].toString();
+      final receiptImageBase64 = await _receiptImageBase64();
+
+      await FirebaseFirestore.instance.collection('bills').add({
+        'title': title,
+        'billDetails': billDetails,
+        'amount': amount,
+        'totalAmount': amount,
+        'paidAmount': 0,
+        'receiptImageBase64': receiptImageBase64,
+        'receiptImageUrl': '',
+        'createdMethod': 'ai',
+        'billerId': billerId,
+        'adminId': adminId,
+        'createdAt': Timestamp.now(),
+      });
+
+      await LedgerService().addBillAmount(
+        adminId: adminId,
+        billerId: billerId,
+        amount: amount,
+      );
+
+      if (!mounted) return;
+
+      _showMessage('AI receipt bill created successfully');
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      _showMessage(e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => isSaving = false);
+      }
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isBusy = isExtracting || isSaving;
+
+    return Scaffold(
+      backgroundColor: Colors.purple.shade50,
+      appBar: AppBar(
+        title: const Text('AI Receipt Bill'),
+        backgroundColor: Colors.deepPurple,
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                height: 48,
+                child: OutlinedButton.icon(
+                  onPressed: isBusy ? null : _pickReceiptImage,
+                  icon: const Icon(Icons.image),
+                  label: const Text('Pick Receipt Image'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.deepPurple,
+                    side: const BorderSide(color: Colors.deepPurple),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              if (_receiptImage != null) ...[
+                const SizedBox(height: 16),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.file(
+                    _receiptImage!,
+                    height: 190,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: isBusy ? null : _extractWithAi,
+                  icon: isExtracting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.auto_awesome),
+                  label: Text(
+                    isExtracting ? 'Extracting...' : 'Extract with AI',
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              _buildField(
+                label: 'Bill Title',
+                controller: _titleCtrl,
+                keyboardType: TextInputType.text,
+              ),
+              const SizedBox(height: 16),
+              _buildField(
+                label: 'Bill Details',
+                controller: _detailsCtrl,
+                keyboardType: TextInputType.multiline,
+                maxLines: 5,
+              ),
+              const SizedBox(height: 16),
+              _buildField(
+                label: 'Total Amount',
+                controller: _amountCtrl,
+                keyboardType: TextInputType.number,
+              ),
+              if (_rawResponse != null && _rawResponse!.trim().isNotEmpty) ...[
+                const SizedBox(height: 16),
+                ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  title: const Text('Groq Raw Response'),
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(_rawResponse!),
+                    ),
+                  ],
+                ),
+              ],
+              const SizedBox(height: 28),
+              SizedBox(
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: isBusy ? null : _createBill,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: isSaving
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Create Bill'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildField({
+    required String label,
+    required TextEditingController controller,
+    required TextInputType keyboardType,
+    int maxLines = 1,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+}

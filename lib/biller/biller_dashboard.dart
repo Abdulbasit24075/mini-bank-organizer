@@ -12,6 +12,7 @@ import '../shared/statistics_screen.dart'; // 1. Import Statistics Screen
 import '../shared/chatbot_screen.dart';
 
 import 'create_bill_screen.dart';
+import 'ai_receipt_bill_screen.dart';
 import 'biller_ledger_screen.dart';
 import 'biller_bills_history_screen.dart';
 import 'biller_online_payment_requests_screen.dart';
@@ -115,6 +116,19 @@ class BillerDashboard extends StatelessWidget {
                             context,
                             MaterialPageRoute(
                               builder: (_) => const CreateBillScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      _actionCard(
+                        icon: Icons.document_scanner_outlined,
+                        label: 'AI Receipt Bill',
+                        color: Colors.deepPurple,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AiReceiptBillScreen(),
                             ),
                           );
                         },
