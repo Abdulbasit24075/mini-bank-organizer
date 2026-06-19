@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/constants/app_colors.dart';
 import '../core/services/price_check_service.dart';
 
 class PriceCheckerScreen extends StatefulWidget {
@@ -79,12 +80,16 @@ class _PriceCheckerScreenState extends State<PriceCheckerScreen> {
     required Function(String?) onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: AppColors.card,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        ),
       ),
       items: items
           .map((e) => DropdownMenuItem(value: e, child: Text(e)))
@@ -100,10 +105,9 @@ class _PriceCheckerScreenState extends State<PriceCheckerScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.deepPurple, Colors.deepPurple.shade300],
-        ),
+        gradient: AppColors.primaryGradient,
         borderRadius: BorderRadius.circular(20),
+        boxShadow: AppColors.softShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,16 +147,16 @@ class _PriceCheckerScreenState extends State<PriceCheckerScreen> {
 
   Widget sourceCard(PriceSource source, int index) {
     final colors = [
-      Colors.green.shade50,
-      Colors.blue.shade50,
-      Colors.orange.shade50,
-      Colors.purple.shade50,
-      Colors.teal.shade50,
+      AppColors.card,
+      AppColors.card,
+      AppColors.card,
+      AppColors.card,
+      AppColors.card,
     ];
 
     return Card(
       color: colors[index % colors.length],
-      elevation: 3,
+      elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: Padding(
@@ -162,10 +166,7 @@ class _PriceCheckerScreenState extends State<PriceCheckerScreen> {
           children: [
             Text(
               source.source,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 17,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
             ),
             const SizedBox(height: 6),
             Text(
@@ -173,7 +174,7 @@ class _PriceCheckerScreenState extends State<PriceCheckerScreen> {
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Colors.deepPurple,
+                color: AppColors.primary,
               ),
             ),
             const SizedBox(height: 8),
@@ -207,10 +208,10 @@ class _PriceCheckerScreenState extends State<PriceCheckerScreen> {
     final r = result;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Price Checker'),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         centerTitle: true,
       ),
@@ -219,9 +220,11 @@ class _PriceCheckerScreenState extends State<PriceCheckerScreen> {
         child: Column(
           children: [
             Card(
-              elevation: 4,
+              color: AppColors.card,
+              elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
+                side: const BorderSide(color: AppColors.border),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -233,6 +236,8 @@ class _PriceCheckerScreenState extends State<PriceCheckerScreen> {
                         labelText: 'City Name',
                         hintText: 'Example: Lahore',
                         prefixIcon: const Icon(Icons.location_city),
+                        filled: true,
+                        fillColor: AppColors.background,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
@@ -247,6 +252,8 @@ class _PriceCheckerScreenState extends State<PriceCheckerScreen> {
                         labelText: 'Product Name',
                         hintText: 'Example: sugar, rice, flour',
                         prefixIcon: const Icon(Icons.shopping_bag),
+                        filled: true,
+                        fillColor: AppColors.background,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
@@ -286,6 +293,8 @@ class _PriceCheckerScreenState extends State<PriceCheckerScreen> {
                           labelText: 'Enter Custom Unit',
                           hintText: 'Example: 250 gram, 1 dozen, 1 bag',
                           prefixIcon: const Icon(Icons.edit),
+                          filled: true,
+                          fillColor: AppColors.background,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
@@ -317,12 +326,7 @@ class _PriceCheckerScreenState extends State<PriceCheckerScreen> {
                     inputDropdown(
                       label: 'Price Type',
                       value: selectedPriceType,
-                      items: const [
-                        'retail',
-                        'wholesale',
-                        'market',
-                        'online',
-                      ],
+                      items: const ['retail', 'wholesale', 'market', 'online'],
                       onChanged: (value) {
                         setState(() => selectedPriceType = value!);
                       },
@@ -335,17 +339,16 @@ class _PriceCheckerScreenState extends State<PriceCheckerScreen> {
                       height: 48,
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple,
+                          backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
+                          elevation: 4,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
                         onPressed: isLoading ? null : checkPrice,
                         icon: const Icon(Icons.search),
-                        label: Text(
-                          isLoading ? 'Checking...' : 'Check Price',
-                        ),
+                        label: Text(isLoading ? 'Checking...' : 'Check Price'),
                       ),
                     ),
                   ],
@@ -359,12 +362,12 @@ class _PriceCheckerScreenState extends State<PriceCheckerScreen> {
 
             if (errorMessage != null)
               Card(
-                color: Colors.red.shade50,
+                color: AppColors.card,
                 child: Padding(
                   padding: const EdgeInsets.all(14),
                   child: Text(
                     errorMessage!,
-                    style: const TextStyle(color: Colors.red),
+                    style: const TextStyle(color: AppColors.danger),
                   ),
                 ),
               ),
@@ -384,13 +387,10 @@ class _PriceCheckerScreenState extends State<PriceCheckerScreen> {
                 const Text('No source cards found.')
               else
                 ...r.priceSources.asMap().entries.map(
-                      (entry) => sourceCard(entry.value, entry.key),
+                  (entry) => sourceCard(entry.value, entry.key),
                 ),
               const SizedBox(height: 12),
-              Text(
-                r.note,
-                style: TextStyle(color: Colors.grey.shade700),
-              ),
+              Text(r.note, style: TextStyle(color: Colors.grey.shade700)),
             ],
           ],
         ),

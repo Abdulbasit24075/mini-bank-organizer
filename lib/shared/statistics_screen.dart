@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../core/constants/app_colors.dart';
 
 class StatisticsScreen extends StatefulWidget {
   final String adminId;
@@ -177,108 +178,112 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.purple.shade50,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text('${widget.billerName} Statistics'),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         centerTitle: true,
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 12),
+      body: Container(
+        decoration: BoxDecoration(gradient: AppColors.backgroundGradient),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
 
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Row(
-              children: [
-                _filterChip('All Time'),
-                _filterChip('Today'),
-                _filterChip('This Week'),
-                _filterChip('This Month'),
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: const Text('Custom'),
-                    selected: selectedFilter == 'Custom',
-                    onSelected: (_) => _pickCustomDateRange(),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                children: [
+                  _filterChip('All Time'),
+                  _filterChip('Today'),
+                  _filterChip('This Week'),
+                  _filterChip('This Month'),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: const Text('Custom'),
+                      selected: selectedFilter == 'Custom',
+                      onSelected: (_) => _pickCustomDateRange(),
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Text(
-              _dateText(),
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Colors.deepPurple,
+                ],
               ),
             ),
-          ),
 
-          Expanded(
-            child: FutureBuilder<Map<String, dynamic>>(
-              future: _loadStatistics(),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Text(
-                      snapshot.error.toString(),
-                      textAlign: TextAlign.center,
-                    ),
-                  );
-                }
-
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                final stats = snapshot.data!;
-
-                return ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    _statCard(
-                      title: 'Total Bills Amount',
-                      value: 'Rs ${stats['totalBillsAmount']}',
-                      icon: Icons.receipt_long,
-                      color: Colors.deepPurple,
-                    ),
-                    _statCard(
-                      title: 'Total Paid Amount',
-                      value: 'Rs ${stats['totalPaidAmount']}',
-                      icon: Icons.payments,
-                      color: Colors.green,
-                    ),
-                    _statCard(
-                      title: 'Number Of Bills',
-                      value: '${stats['numberOfBills']}',
-                      icon: Icons.list_alt,
-                      color: Colors.blue,
-                    ),
-                    _statCard(
-                      title: 'Number Of Payments',
-                      value: '${stats['numberOfPayments']}',
-                      icon: Icons.payment,
-                      color: Colors.orange,
-                    ),
-                    _statCard(
-                      title: stats['currentBalance'] >= 0
-                          ? 'Current Remaining'
-                          : 'Current Advance',
-                      value: 'Rs ${stats['currentBalance'].abs()}',
-                      icon: Icons.account_balance_wallet,
-                      color: Colors.red,
-                    ),
-                  ],
-                );
-              },
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Text(
+                _dateText(),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
+              ),
             ),
-          ),
-        ],
+
+            Expanded(
+              child: FutureBuilder<Map<String, dynamic>>(
+                future: _loadStatistics(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text(
+                        snapshot.error.toString(),
+                        textAlign: TextAlign.center,
+                      ),
+                    );
+                  }
+
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final stats = snapshot.data!;
+
+                  return ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      _statCard(
+                        title: 'Total Bills Amount',
+                        value: 'Rs ${stats['totalBillsAmount']}',
+                        icon: Icons.receipt_long,
+                        color: AppColors.primary,
+                      ),
+                      _statCard(
+                        title: 'Total Paid Amount',
+                        value: 'Rs ${stats['totalPaidAmount']}',
+                        icon: Icons.payments,
+                        color: AppColors.success,
+                      ),
+                      _statCard(
+                        title: 'Number Of Bills',
+                        value: '${stats['numberOfBills']}',
+                        icon: Icons.list_alt,
+                        color: AppColors.secondary,
+                      ),
+                      _statCard(
+                        title: 'Number Of Payments',
+                        value: '${stats['numberOfPayments']}',
+                        icon: Icons.payment,
+                        color: AppColors.warning,
+                      ),
+                      _statCard(
+                        title: stats['currentBalance'] >= 0
+                            ? 'Current Remaining'
+                            : 'Current Advance',
+                        value: 'Rs ${stats['currentBalance'].abs()}',
+                        icon: Icons.account_balance_wallet,
+                        color: AppColors.danger,
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -300,10 +305,14 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     required IconData icon,
     required Color color,
   }) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(
+        gradient: AppColors.softCardGradient(color),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppColors.softShadow,
+      ),
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: color,

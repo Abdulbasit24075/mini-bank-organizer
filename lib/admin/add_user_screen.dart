@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../core/constants/app_colors.dart';
 import '../core/services/ledger_service.dart';
 
 class AddUserScreen extends StatefulWidget {
@@ -85,9 +86,9 @@ class _AddUserScreenState extends State<AddUserScreen> {
 
       Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
@@ -97,7 +98,13 @@ class _AddUserScreenState extends State<AddUserScreen> {
   Widget build(BuildContext context) {
     if (widget.roleToAdd != 'biller') {
       return Scaffold(
-        appBar: AppBar(title: const Text('Access Denied')),
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: const Text('Access Denied'),
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          centerTitle: true,
+        ),
         body: const Center(
           child: Text('Only billers can be added through this screen.'),
         ),
@@ -105,38 +112,80 @@ class _AddUserScreenState extends State<AddUserScreen> {
     }
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Add Biller'),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'User Email',
-                hintText: 'Enter the registered email of the user',
-                border: OutlineInputBorder(),
+      body: Container(
+        decoration: BoxDecoration(gradient: AppColors.backgroundGradient),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: TweenAnimationBuilder<double>(
+            duration: const Duration(milliseconds: 420),
+            tween: Tween(begin: 0.96, end: 1),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, child) => Opacity(
+              opacity: value,
+              child: Transform.translate(
+                offset: Offset(0, 18 * (1 - value)),
+                child: child,
               ),
             ),
-            const SizedBox(height: 20),
-            isLoading
-                ? const CircularProgressIndicator()
-                : SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
-                  foregroundColor: Colors.white,
-                ),
-                onPressed: addUser,
-                child: const Text('Add Biller'),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: AppColors.cardGradient,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: AppColors.softShadow,
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      labelText: 'User Email',
+                      hintText: 'Enter the registered email of the user',
+                      prefixIcon: const Icon(
+                        Icons.email,
+                        color: AppColors.primary,
+                      ),
+                      filled: true,
+                      fillColor: AppColors.background,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: const BorderSide(color: AppColors.border),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  isLoading
+                      ? const CircularProgressIndicator()
+                      : SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              elevation: 4,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            onPressed: addUser,
+                            child: const Text('Add Biller'),
+                          ),
+                        ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );

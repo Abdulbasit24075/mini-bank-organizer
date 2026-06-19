@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../core/constants/app_colors.dart';
 import '../core/services/relationship_service.dart';
 import '../shared/payment_history_screen.dart';
 import 'admin_biller_ledger_screen.dart';
@@ -14,9 +15,12 @@ class LinkedUsersScreen extends StatelessWidget {
     final adminId = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('My Billers'),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        centerTitle: true,
       ),
       body: FutureBuilder(
         future: service.getLinkedUsersForAdmin(),
@@ -37,9 +41,18 @@ class LinkedUsersScreen extends StatelessWidget {
               final biller = users[i];
 
               return Card(
+                color: AppColors.card,
+                elevation: 0,
                 margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  side: const BorderSide(color: AppColors.border),
+                ),
                 child: ListTile(
-                  leading: const Icon(Icons.person),
+                  leading: const CircleAvatar(
+                    backgroundColor: AppColors.primary,
+                    child: Icon(Icons.person, color: Colors.white),
+                  ),
                   title: Text(biller['name']),
                   subtitle: Text(
                     '${biller['email']}\nLong press to view payment history',

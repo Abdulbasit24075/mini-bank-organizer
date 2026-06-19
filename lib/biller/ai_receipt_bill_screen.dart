@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../core/constants/app_colors.dart';
 import '../core/services/groq_receipt_service.dart';
 import '../core/services/ledger_service.dart';
 import '../core/services/relationship_service.dart';
@@ -179,130 +180,175 @@ class _AiReceiptBillScreenState extends State<AiReceiptBillScreen> {
     final isBusy = isExtracting || isSaving;
 
     return Scaffold(
-      backgroundColor: Colors.purple.shade50,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('AI Receipt Bill'),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(
-                height: 48,
-                child: OutlinedButton.icon(
-                  onPressed: isBusy ? null : _pickReceiptImage,
-                  icon: const Icon(Icons.image),
-                  label: const Text('Pick Receipt Image'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.deepPurple,
-                    side: const BorderSide(color: Colors.deepPurple),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+      body: Container(
+        decoration: BoxDecoration(gradient: AppColors.backgroundGradient),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: TweenAnimationBuilder<double>(
+            duration: const Duration(milliseconds: 460),
+            tween: Tween(begin: 0.95, end: 1),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, child) => Opacity(
+              opacity: value,
+              child: Transform.translate(
+                offset: Offset(0, 20 * (1 - value)),
+                child: Transform.scale(scale: value, child: child),
+              ),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: AppColors.cardGradient,
+                borderRadius: BorderRadius.circular(22),
+                boxShadow: AppColors.softShadow,
+                border: Border.all(color: AppColors.border),
+              ),
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Icon(
+                    Icons.document_scanner_outlined,
+                    size: 48,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Create From Receipt',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
                     ),
                   ),
-                ),
-              ),
-              if (_receiptImage != null) ...[
-                const SizedBox(height: 16),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.file(
-                    _receiptImage!,
-                    height: 190,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 16),
-              SizedBox(
-                height: 48,
-                child: ElevatedButton.icon(
-                  onPressed: isBusy ? null : _extractWithAi,
-                  icon: isExtracting
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.auto_awesome),
-                  label: Text(
-                    isExtracting ? 'Extracting...' : 'Extract with AI',
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              _buildField(
-                label: 'Bill Title',
-                controller: _titleCtrl,
-                keyboardType: TextInputType.text,
-              ),
-              const SizedBox(height: 16),
-              _buildField(
-                label: 'Bill Details',
-                controller: _detailsCtrl,
-                keyboardType: TextInputType.multiline,
-                maxLines: 5,
-              ),
-              const SizedBox(height: 16),
-              _buildField(
-                label: 'Total Amount',
-                controller: _amountCtrl,
-                keyboardType: TextInputType.number,
-              ),
-              if (_rawResponse != null && _rawResponse!.trim().isNotEmpty) ...[
-                const SizedBox(height: 16),
-                ExpansionTile(
-                  tilePadding: EdgeInsets.zero,
-                  title: const Text('Groq Raw Response'),
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    height: 50,
+                    child: OutlinedButton.icon(
+                      onPressed: isBusy ? null : _pickReceiptImage,
+                      icon: const Icon(Icons.image),
+                      label: const Text('Pick Receipt Image'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        side: const BorderSide(color: AppColors.primary),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
-                      child: Text(_rawResponse!),
+                    ),
+                  ),
+                  if (_receiptImage != null) ...[
+                    const SizedBox(height: 16),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.file(
+                        _receiptImage!,
+                        height: 190,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ],
-                ),
-              ],
-              const SizedBox(height: 28),
-              SizedBox(
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: isBusy ? null : _createBill,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 50,
+                    child: ElevatedButton.icon(
+                      onPressed: isBusy ? null : _extractWithAi,
+                      icon: isExtracting
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.auto_awesome),
+                      label: Text(
+                        isExtracting ? 'Extracting...' : 'Extract with AI',
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
                     ),
                   ),
-                  child: isSaving
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Create Bill'),
-                ),
+                  const SizedBox(height: 24),
+                  _buildField(
+                    label: 'Bill Title',
+                    controller: _titleCtrl,
+                    keyboardType: TextInputType.text,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildField(
+                    label: 'Bill Details',
+                    controller: _detailsCtrl,
+                    keyboardType: TextInputType.multiline,
+                    maxLines: 5,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildField(
+                    label: 'Total Amount',
+                    controller: _amountCtrl,
+                    keyboardType: TextInputType.number,
+                  ),
+                  if (_rawResponse != null &&
+                      _rawResponse!.trim().isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    ExpansionTile(
+                      tilePadding: EdgeInsets.zero,
+                      title: const Text('Groq Raw Response'),
+                      children: [
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Text(_rawResponse!),
+                        ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 28),
+                  SizedBox(
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: isBusy ? null : _createBill,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.success,
+                        foregroundColor: Colors.white,
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: isSaving
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text('Create Bill'),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -322,8 +368,15 @@ class _AiReceiptBillScreenState extends State<AiReceiptBillScreen> {
       decoration: InputDecoration(
         labelText: label,
         filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        fillColor: AppColors.background,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        ),
       ),
     );
   }

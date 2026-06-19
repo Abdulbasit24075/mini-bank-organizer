@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../core/constants/app_colors.dart';
 import '../core/services/online_payment_service.dart';
 
 class BillerOnlinePaymentRequestsScreen extends StatelessWidget {
@@ -12,10 +13,11 @@ class BillerOnlinePaymentRequestsScreen extends StatelessWidget {
     final billerId = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
-      backgroundColor: Colors.purple.shade50,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Online Payment Requests'),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         centerTitle: true,
       ),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -80,9 +82,10 @@ class _RequestCard extends StatelessWidget {
         : timestamp.toDate().toString().split('.').first;
 
     return Card(
+      color: AppColors.card,
       margin: const EdgeInsets.only(bottom: 14),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      elevation: 0,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -93,7 +96,7 @@ class _RequestCard extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.deepPurple,
+                color: AppColors.primary,
               ),
             ),
             const SizedBox(height: 8),
@@ -107,8 +110,9 @@ class _RequestCard extends StatelessWidget {
                 Expanded(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                      backgroundColor: AppColors.success,
                       foregroundColor: Colors.white,
+                      elevation: 4,
                     ),
                     onPressed: () => _confirm(context, request),
                     child: const Text('Confirm'),
@@ -118,8 +122,9 @@ class _RequestCard extends StatelessWidget {
                 Expanded(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
+                      backgroundColor: AppColors.danger,
                       foregroundColor: Colors.white,
+                      elevation: 4,
                     ),
                     onPressed: () => _reject(context),
                     child: const Text('Reject'),

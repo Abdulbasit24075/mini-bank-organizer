@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import '../core/constants/app_colors.dart';
 
 class ReceiptViewerScreen extends StatelessWidget {
   final String? imageUrl;
@@ -20,8 +21,9 @@ class ReceiptViewerScreen extends StatelessWidget {
       backgroundColor: Colors.black,
       appBar: AppBar(
         title: Text(title),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
+        centerTitle: true,
       ),
       body: Center(child: InteractiveViewer(child: _receiptImage())),
     );

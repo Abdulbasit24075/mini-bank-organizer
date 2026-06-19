@@ -165,11 +165,7 @@ class PdfReportService {
               _cell(item.type),
               _cell(item.details),
               _cell('Rs ${item.amount}'),
-              _cell(
-                item.balanceAfter == null
-                    ? '-'
-                    : 'Rs ${item.balanceAfter!.abs()}',
-              ),
+              _cell(_formatBalanceAfter(item.balanceAfter)),
             ],
           );
         }),
@@ -202,6 +198,15 @@ class PdfReportService {
     }
 
     return 'N/A';
+  }
+
+  String _formatBalanceAfter(int? balanceAfter) {
+    if (balanceAfter == null) {
+      return '-';
+    }
+
+    final status = balanceAfter >= 0 ? 'R' : 'ADV';
+    return 'Rs ${balanceAfter.abs()} $status';
   }
 
   int _asInt(dynamic value) {

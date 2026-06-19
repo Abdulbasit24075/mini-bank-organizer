@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../core/constants/app_colors.dart';
 import '../core/services/relationship_service.dart';
 import '../shared/notebook_screen.dart';
 
@@ -13,10 +14,11 @@ class AdminNotebooksScreen extends StatelessWidget {
     final adminId = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
-      backgroundColor: Colors.purple.shade50,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('My Notebooks'),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         centerTitle: true,
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
@@ -48,13 +50,16 @@ class AdminNotebooksScreen extends StatelessWidget {
               final biller = billers[index];
 
               return Card(
+                color: AppColors.card,
+                elevation: 0,
                 margin: const EdgeInsets.only(bottom: 12),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(18),
+                  side: const BorderSide(color: AppColors.border),
                 ),
                 child: ListTile(
                   leading: const CircleAvatar(
-                    backgroundColor: Colors.deepPurple,
+                    backgroundColor: AppColors.primary,
                     child: Icon(Icons.menu_book, color: Colors.white),
                   ),
                   title: Text(biller['name'] ?? 'Biller'),

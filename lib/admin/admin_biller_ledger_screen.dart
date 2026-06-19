@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../core/constants/app_colors.dart';
 import '../core/services/ledger_service.dart';
 import '../core/services/pdf_report_service.dart';
 import '../shared/statistics_screen.dart';
@@ -25,162 +26,166 @@ class AdminBillerLedgerScreen extends StatelessWidget {
     final adminId = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
-      backgroundColor: Colors.purple.shade50,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Biller Account'),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         centerTitle: true,
       ),
-      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: LedgerService().ledgerStream(
-          adminId: adminId,
-          billerId: billerId,
-        ),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Container(
+        decoration: BoxDecoration(gradient: AppColors.backgroundGradient),
+        child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: LedgerService().ledgerStream(
+            adminId: adminId,
+            billerId: billerId,
+          ),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (snapshot.data!.docs.isEmpty) {
-            return const Center(
-              child: Text(
-                'Ledger not found for this biller.',
-                style: TextStyle(fontSize: 16),
+            if (snapshot.data!.docs.isEmpty) {
+              return const Center(
+                child: Text(
+                  'Ledger not found for this biller.',
+                  style: TextStyle(fontSize: 16),
+                ),
+              );
+            }
+
+            final ledger = snapshot.data!.docs.first.data();
+            final int balance = ledger['balance'] as int;
+            final bool clearRequestPending =
+                ledger['clearRequestPending'] == true;
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  _card(title: 'Biller', content: '$billerName\n$billerEmail'),
+
+                  const SizedBox(height: 12),
+
+                  _card(
+                    title: 'Ledger Summary',
+                    content:
+                        'Total Bills: ${ledger['totalBills']}\n'
+                        'Total Paid: ${ledger['totalPaid']}\n'
+                        '${balance >= 0 ? 'Remaining' : 'Advance'}: ${balance.abs()}',
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  _actionButton(
+                    text: 'View Bill History',
+                    icon: Icons.receipt_long,
+                    color: AppColors.success,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AdminBillerBillHistoryScreen(
+                            adminId: adminId,
+                            billerId: billerId,
+                            billerName: billerName,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  _actionButton(
+                    text: 'View Statistics',
+                    icon: Icons.analytics,
+                    color: AppColors.secondary,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => StatisticsScreen(
+                            adminId: adminId,
+                            billerId: billerId,
+                            billerName: billerName,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  _actionButton(
+                    text: 'Export PDF',
+                    icon: Icons.picture_as_pdf,
+                    color: AppColors.warning,
+                    onPressed: () => _exportPdf(context, adminId),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  _actionButton(
+                    text: clearRequestPending
+                        ? 'Clear Request Pending'
+                        : 'Request Clear History',
+                    icon: Icons.delete_sweep,
+                    color: clearRequestPending ? Colors.grey : AppColors.danger,
+                    onPressed: clearRequestPending
+                        ? null
+                        : () async {
+                            try {
+                              await LedgerService().requestClearHistory(
+                                adminId: adminId,
+                                billerId: billerId,
+                              );
+
+                              if (!context.mounted) return;
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Clear history request sent to biller',
+                                  ),
+                                ),
+                              );
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(e.toString())),
+                              );
+                            }
+                          },
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  _payBox(context, adminId),
+
+                  const SizedBox(height: 12),
+
+                  _actionButton(
+                    text: 'Online Pay',
+                    icon: Icons.account_balance_wallet,
+                    color: AppColors.success,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => OnlinePaymentRequestScreen(
+                            adminId: adminId,
+                            billerId: billerId,
+                            billerName: billerName,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             );
-          }
-
-          final ledger = snapshot.data!.docs.first.data();
-          final int balance = ledger['balance'] as int;
-          final bool clearRequestPending =
-              ledger['clearRequestPending'] == true;
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                _card(title: 'Biller', content: '$billerName\n$billerEmail'),
-
-                const SizedBox(height: 12),
-
-                _card(
-                  title: 'Ledger Summary',
-                  content:
-                      'Total Bills: ${ledger['totalBills']}\n'
-                      'Total Paid: ${ledger['totalPaid']}\n'
-                      '${balance >= 0 ? 'Remaining' : 'Advance'}: ${balance.abs()}',
-                ),
-
-                const SizedBox(height: 16),
-
-                _actionButton(
-                  text: 'View Bill History',
-                  icon: Icons.receipt_long,
-                  color: Colors.teal,
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => AdminBillerBillHistoryScreen(
-                          adminId: adminId,
-                          billerId: billerId,
-                          billerName: billerName,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 12),
-
-                _actionButton(
-                  text: 'View Statistics',
-                  icon: Icons.analytics,
-                  color: Colors.indigo,
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => StatisticsScreen(
-                          adminId: adminId,
-                          billerId: billerId,
-                          billerName: billerName,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 12),
-
-                _actionButton(
-                  text: 'Export PDF',
-                  icon: Icons.picture_as_pdf,
-                  color: Colors.deepOrange,
-                  onPressed: () => _exportPdf(context, adminId),
-                ),
-
-                const SizedBox(height: 12),
-
-                _actionButton(
-                  text: clearRequestPending
-                      ? 'Clear Request Pending'
-                      : 'Request Clear History',
-                  icon: Icons.delete_sweep,
-                  color: clearRequestPending ? Colors.grey : Colors.red,
-                  onPressed: clearRequestPending
-                      ? null
-                      : () async {
-                          try {
-                            await LedgerService().requestClearHistory(
-                              adminId: adminId,
-                              billerId: billerId,
-                            );
-
-                            if (!context.mounted) return;
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Clear history request sent to biller',
-                                ),
-                              ),
-                            );
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(e.toString())),
-                            );
-                          }
-                        },
-                ),
-
-                const SizedBox(height: 16),
-
-                _payBox(context, adminId),
-
-                const SizedBox(height: 12),
-
-                _actionButton(
-                  text: 'Online Pay',
-                  icon: Icons.account_balance_wallet,
-                  color: Colors.green,
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => OnlinePaymentRequestScreen(
-                          adminId: adminId,
-                          billerId: billerId,
-                          billerName: billerName,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          );
-        },
+          },
+        ),
       ),
     );
   }
@@ -212,8 +217,13 @@ class AdminBillerLedgerScreen extends StatelessWidget {
   Widget _payBox(BuildContext context, String adminId) {
     final TextEditingController ctrl = TextEditingController();
 
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: AppColors.cardGradient,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppColors.softShadow,
+        border: Border.all(color: AppColors.border),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -227,9 +237,13 @@ class AdminBillerLedgerScreen extends StatelessWidget {
             TextField(
               controller: ctrl,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Amount',
-                border: OutlineInputBorder(),
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -238,6 +252,11 @@ class AdminBillerLedgerScreen extends StatelessWidget {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepPurple,
+                  foregroundColor: Colors.white,
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
                 onPressed: () async {
                   final text = ctrl.text.trim();
@@ -274,7 +293,7 @@ class AdminBillerLedgerScreen extends StatelessWidget {
                     ).showSnackBar(SnackBar(content: Text(e.toString())));
                   }
                 },
-                child: const Text('Pay', style: TextStyle(color: Colors.white)),
+                child: const Text('Pay'),
               ),
             ),
           ],
@@ -297,8 +316,10 @@ class AdminBillerLedgerScreen extends StatelessWidget {
           backgroundColor: color,
           foregroundColor: Colors.white,
           disabledBackgroundColor: Colors.grey,
+          elevation: 4,
+          padding: const EdgeInsets.symmetric(vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(14),
           ),
         ),
         icon: Icon(icon),
@@ -309,9 +330,13 @@ class AdminBillerLedgerScreen extends StatelessWidget {
   }
 
   Widget _card({required String title, required String content}) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 3,
+    return Container(
+      decoration: BoxDecoration(
+        gradient: AppColors.cardGradient,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppColors.softShadow,
+        border: Border.all(color: AppColors.border),
+      ),
       child: SizedBox(
         width: double.infinity,
         child: Padding(

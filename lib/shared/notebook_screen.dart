@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
+import '../core/constants/app_colors.dart';
 import '../core/services/notebook_service.dart';
 import 'notebook_summary_screen.dart';
 
@@ -23,10 +24,11 @@ class NotebookScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.purple.shade50,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text('$billerName Notebook'),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         centerTitle: true,
       ),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -84,7 +86,7 @@ class NotebookScreen extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.note_add),
         label: const Text('Create Summary'),
@@ -132,8 +134,9 @@ class _NotebookEntryCard extends StatelessWidget {
     final comment = (entry['comment'] ?? '').toString();
 
     return Card(
+      color: AppColors.card,
       margin: const EdgeInsets.only(bottom: 14),
-      elevation: 3,
+      elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -143,7 +146,7 @@ class _NotebookEntryCard extends StatelessWidget {
             Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: Colors.deepPurple,
+                  backgroundColor: AppColors.primary,
                   child: Text(
                     '$number',
                     style: const TextStyle(color: Colors.white),
@@ -163,18 +166,21 @@ class _NotebookEntryCard extends StatelessWidget {
                       ),
                       Text(
                         'Saved: $savedDate',
-                        style: TextStyle(color: Colors.grey.shade700),
+                        style: const TextStyle(color: AppColors.textSecondary),
                       ),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.deepPurple),
+                  icon: const Icon(Icons.edit, color: AppColors.primary),
                   tooltip: 'Edit',
                   onPressed: () => _showEditSheet(context),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    color: AppColors.danger,
+                  ),
                   tooltip: 'Delete',
                   onPressed: () => _confirmDelete(context),
                 ),
@@ -256,7 +262,9 @@ class _NotebookEntryCard extends StatelessWidget {
                       controller: monthCtrl,
                       decoration: const InputDecoration(
                         labelText: 'Month Detail',
-                        border: OutlineInputBorder(),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(14)),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -265,7 +273,9 @@ class _NotebookEntryCard extends StatelessWidget {
                       maxLines: 4,
                       decoration: const InputDecoration(
                         labelText: 'Comment',
-                        border: OutlineInputBorder(),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(14)),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -274,8 +284,12 @@ class _NotebookEntryCard extends StatelessWidget {
                       height: 48,
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple,
+                          backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                         ),
                         icon: isSaving
                             ? const SizedBox(
@@ -357,7 +371,10 @@ class _NotebookEntryCard extends StatelessWidget {
             ),
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+              child: const Text(
+                'Delete',
+                style: TextStyle(color: AppColors.danger),
+              ),
             ),
           ],
         );

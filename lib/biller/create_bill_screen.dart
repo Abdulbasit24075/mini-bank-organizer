@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../core/constants/app_colors.dart';
 import '../core/services/ledger_service.dart';
 import '../core/services/relationship_service.dart';
 
@@ -141,88 +142,127 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.purple.shade50,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Create Bill'),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          ),
-          child: Column(
-            children: [
-              _buildField(
-                label: 'Bill Title',
-                controller: _titleCtrl,
-                keyboardType: TextInputType.text,
+      body: Container(
+        decoration: BoxDecoration(gradient: AppColors.backgroundGradient),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: TweenAnimationBuilder<double>(
+            duration: const Duration(milliseconds: 460),
+            tween: Tween(begin: 0.95, end: 1),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, child) => Opacity(
+              opacity: value,
+              child: Transform.translate(
+                offset: Offset(0, 20 * (1 - value)),
+                child: Transform.scale(scale: value, child: child),
               ),
-              const SizedBox(height: 16),
-              _buildField(
-                label: 'Bill Details',
-                controller: _detailsCtrl,
-                keyboardType: TextInputType.multiline,
-                maxLines: 5,
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: AppColors.cardGradient,
+                borderRadius: BorderRadius.circular(22),
+                boxShadow: AppColors.softShadow,
+                border: Border.all(color: AppColors.border),
               ),
-              const SizedBox(height: 16),
-              _buildField(
-                label: 'Total Amount',
-                controller: _amountCtrl,
-                keyboardType: TextInputType.number,
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
               ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: OutlinedButton.icon(
-                  onPressed: isLoading ? null : _pickReceiptImage,
-                  icon: const Icon(Icons.image),
-                  label: const Text('Pick Receipt Image'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.deepPurple,
-                    side: const BorderSide(color: Colors.deepPurple),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              child: Column(
+                children: [
+                  const Icon(
+                    Icons.receipt_long,
+                    size: 48,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Manual Bill Entry',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
                     ),
                   ),
-                ),
-              ),
-              if (_receiptImage != null) ...[
-                const SizedBox(height: 16),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.file(
-                    _receiptImage!,
-                    height: 180,
+                  const SizedBox(height: 20),
+                  _buildField(
+                    label: 'Bill Title',
+                    controller: _titleCtrl,
+                    keyboardType: TextInputType.text,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildField(
+                    label: 'Bill Details',
+                    controller: _detailsCtrl,
+                    keyboardType: TextInputType.multiline,
+                    maxLines: 5,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildField(
+                    label: 'Total Amount',
+                    controller: _amountCtrl,
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
                     width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 30),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    height: 50,
+                    child: OutlinedButton.icon(
+                      onPressed: isLoading ? null : _pickReceiptImage,
+                      icon: const Icon(Icons.image),
+                      label: const Text('Pick Receipt Image'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        side: const BorderSide(color: AppColors.primary),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
                     ),
                   ),
-                  onPressed: isLoading ? null : createBill,
-                  child: isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          'Create Bill',
-                          style: TextStyle(color: Colors.white),
+                  if (_receiptImage != null) ...[
+                    const SizedBox(height: 16),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.file(
+                        _receiptImage!,
+                        height: 180,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
                         ),
-                ),
+                      ),
+                      onPressed: isLoading ? null : createBill,
+                      child: isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text('Create Bill'),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -242,8 +282,15 @@ class _CreateBillScreenState extends State<CreateBillScreen> {
       decoration: InputDecoration(
         labelText: label,
         filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        fillColor: AppColors.background,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        ),
       ),
     );
   }

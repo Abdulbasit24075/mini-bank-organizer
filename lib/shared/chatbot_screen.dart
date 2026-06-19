@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/constants/app_colors.dart';
 import '../core/services/local_chatbot_service.dart';
 
 class ChatbotScreen extends StatefulWidget {
@@ -74,6 +75,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         constraints: const BoxConstraints(maxWidth: 280),
         decoration: BoxDecoration(
           color: isUser ? Colors.deepPurple : Colors.grey.shade300,
+          boxShadow: AppColors.softShadow,
           borderRadius: BorderRadius.circular(14),
         ),
         child: Text(
@@ -93,10 +95,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.purple.shade50,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Smart Assistant'),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         centerTitle: true,
       ),
       body: Column(
@@ -119,7 +122,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
           Container(
             padding: const EdgeInsets.all(10),
-            color: Colors.white,
+            color: AppColors.card,
             child: Row(
               children: [
                 Expanded(
@@ -139,13 +142,17 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: const BorderSide(color: AppColors.primary),
+                      ),
                     ),
                     onSubmitted: (_) => sendMessage(),
                   ),
                 ),
                 const SizedBox(width: 8),
                 CircleAvatar(
-                  backgroundColor: Colors.deepPurple,
+                  backgroundColor: AppColors.primary,
                   child: IconButton(
                     icon: const Icon(Icons.send, color: Colors.white),
                     onPressed: isLoading ? null : sendMessage,
